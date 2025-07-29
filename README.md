@@ -7,7 +7,7 @@ Tree-Based Models - LightGBM, XGBoost Classical Statistical Time-Series Models -
 
 გამოყენებული მიდგომები
 
-0. მონაცემთა წინასწარი დამუშავება (DataExploration)
+# 0. მონაცემთა წინასწარი დამუშავება (DataExploration)
 
 მონაცემთა შეერთება: train.csv, features.csv, stores.csv ფაილები გაერთიანდა ერთ მონაცემთა ნაკრებად.
 
