@@ -38,7 +38,7 @@ Tree-Based Models - LightGBM, XGBoost Classical Statistical Time-Series Models -
 
 
 
-# XGBoost 
+# 1. XGBoost 
 
 DataPreprocessing 
 
@@ -89,7 +89,7 @@ n_jobs=-1
 
 Validation WMAE: 4300.16
 
-# LightGBM
+# 2. LightGBM
 
 DataPreprocessing
 
