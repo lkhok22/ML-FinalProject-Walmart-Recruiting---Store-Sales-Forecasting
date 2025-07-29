@@ -10,6 +10,11 @@ Tree-Based Models - LightGBM, XGBoost Classical Statistical Time-Series Models -
 # 0. მონაცემთა წინასწარი დამუშავება (DataExploration)
 
 მონაცემთა შეერთება: train.csv, features.csv, stores.csv ფაილები გაერთიანდა ერთ მონაცემთა ნაკრებად.
+საბოლოოდ მიიღებოდა მონაცემები 421570 სტრიქონითა და 16 სვეტით
+სულ იყო 45 განსხვავებული მაღაზია და 81 დეპარტამენტი
+ასევე Weekly sales-ებში გვქონდა უარყოფითი მნიშვნელობები რომლებიც მონაცემების მხოლოდ 0.3% შეადგენდა ამიტომ მათი მოშორება ლოგიკური იყო
+<img width="980" height="583" alt="image" src="https://github.com/user-attachments/assets/36908f55-899e-4d1e-aa0a-b02a18de0d3c" />
+
 
 
 
