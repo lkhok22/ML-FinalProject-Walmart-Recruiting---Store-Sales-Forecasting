@@ -2,15 +2,12 @@ Walmart Recruiting - Store Sales Forecasting
 
 პროექტის მიმოხილვა
 
-ეს პროექტი წარმოადგენს Kaggle-ის კონკურსს „Walmart Recruiting - Store Sales Forecasting“, სადაც მიზანია Walmart-ის მაღაზიების ყოველკვირეული გაყიდვების პროგნოზირება სხვადასხვა მაღაზიისა და განყოფილებისთვის. პროექტის ფარგლებში გამოცდილია სხვადასხვა მოდელის არქიტექტურა, მათ შორის XGBoost, RandomForest და Prophet, ხოლო ARIMA-ს გამოყენებაც განხილულია, თუმცა გარკვეული შეზღუდვებით.
+ეს პროექტი წარმოადგენს Kaggle-ის კონკურსს „Walmart Recruiting - Store Sales Forecasting“, სადაც მიზანია Walmart-ის მაღაზიების ყოველკვირეული გაყიდვების პროგნოზირება სხვადასხვა მაღაზიისა და განყოფილებისთვის. პროექტის ფარგლებში გამოცდილია სხვადასხვა მოდელის არქიტექტურა Deep Learning Models - N-BEATS, Temporal Fusion Transformer, PatchTST, DLinear
+Tree-Based Models - LightGBM, XGBoost Classical Statistical Time-Series Models - ARIMA, SARIMA, Prophet.
 
 გამოყენებული მიდგომები
 
-1. მონაცემთა წინასწარი დამუშავება
-
-
-
-
+0. მონაცემთა წინასწარი დამუშავება (DataExploration)
 
 მონაცემთა შეერთება: train.csv, features.csv, stores.csv ფაილები გაერთიანდა ერთ მონაცემთა ნაკრებად.
 
