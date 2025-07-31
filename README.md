@@ -2435,3 +2435,316 @@ N-BEATS-ის trend და seasonality block-ებმა შეძლეს �
 
 
 
+
+# 10. Ensemble of tree models 
+
+მონაცემთა წინასწარი დამუშავება
+
+
+
+
+
+მონაცემთა ჩატვირთვა: ჩაიტვირთა Walmart-ის მონაცემები (train.csv, test.csv, features.csv, stores.csv) Google Drive-დან. გაერთიანდა Store და Date-ზე, IsHoliday შენარჩუნდა features.csv-დან.
+
+
+
+გაწმენდა:
+
+
+
+
+
+Date გარდაიქმნა datetime ფორმატში.
+
+
+
+MarkDown1-5 ხარვეზები შეივსო 0-ებით.
+
+
+
+Temperature, Fuel_Price, CPI, Unemployment ხარვეზები შეივსო საშუალო მნიშვნელობებით.
+
+
+
+IsHoliday გარდაიქმნა ორობით (0/1).
+
+
+
+ფუნქციების შექმნა:
+
+
+
+
+
+დაემატა დროის საფუძველზე ფუნქციები: Year, Month, Week, Day, DayOfWeek, Quarter, IsYearEnd, IsYearStart, IsMonthEnd, IsMonthStart.
+
+
+
+Store_Dept კომბინაცია, Type კოდირებული LabelEncoder-ით.
+
+
+
+Lag ფუნქციები: Weekly_Sales lags (1, 2, 3, 4, 8, 12) და rolling statistics (mean, std) 3, 4, 8 კვირის ფანჯრებით.
+
+
+
+მონაცემთა გაყოფა: TimeSeriesSplit (3 split), ბოლო split გამოყენებული ვალიდაციისთვის.
+
+მოდელის არქიტექტურა
+
+
+
+
+
+მოდელები:
+
+
+
+
+
+LightGBM: n_estimators=1000, learning_rate=0.05, max_depth=8, num_leaves=31, subsample=0.8, colsample_bytree=0.8.
+
+
+
+XGBoost: n_estimators=500, learning_rate=0.05, max_depth=8, subsample=0.8, colsample_bytree=0.8, reg_alpha=0.1, reg_lambda=0.1.
+
+
+
+RandomForest: n_estimators=200, max_depth=15, min_samples_split=5, min_samples_leaf=2.
+
+
+
+Ensemble: სამივე მოდელის პროგნოზების საშუალო.
+
+
+
+ტრენინგი:
+
+
+
+
+
+თითოეული მოდელი გაწვრთნილია გაყოფილ სასწავლო მონაცემებზე (382955 ჩანაწერი, 36 ფუნქცია).
+
+
+
+საბოლოო მოდელები გაწვრთნილია სრულ სასწავლო მონაცემებზე.
+
+
+
+ზარალი: MAE, RMSE (ვალიდაციისთვის), WMAE არ გამოყენებულა.
+
+შედეგები
+
+
+
+
+
+საბოლოო მეტრიკები:
+
+
+
+
+
+LightGBM: Validation MAE: 364.5412, RMSE: 1367.9912.
+
+
+
+XGBoost: Validation MAE: 334.3273, RMSE: 1577.1431.
+
+
+
+RandomForest: Validation MAE: 258.4051, RMSE: 1378.3604.
+
+
+
+Ensemble: Validation MAE: 283.7097, RMSE: 1329.0928.
+
+
+
+ფუნქციების მნიშვნელობა (LightGBM):
+
+
+
+
+
+ყველაზე მნიშვნელოვანი: Weekly_Sales_rolling_mean_3 (4657), Weekly_Sales_lag_2 (3796), Weekly_Sales_lag_1 (3768).
+
+
+
+ანალიზი:
+
+
+
+
+
+Ensemble-მა აჩვენა უკეთესი RMSE, ვიდრე XGBoost და RandomForest, მაგრამ MAE ოდნავ უარესი, ვიდრე RandomForest.
+
+
+
+Lag და rolling ფუნქციები ყველაზე მნიშვნელოვანია პროგნოზებისთვის.
+
+
+
+
+# 11. Ensemble of deep learning models 
+
+მონაცემთა წინასწარი დამუშავება
+
+
+
+
+
+მონაცემთა ჩატვირთვა: ჩაიტვირთა Walmart-ის მონაცემები (train.csv, test.csv, features.csv, stores.csv) Google Drive-დან. გაერთიანდა Store და Date-ზე, IsHoliday შენარჩუნდა features.csv-დან.
+
+
+
+გაწმენდა:
+
+
+
+
+
+Date გარდაიქმნა datetime ფორმატში და გადაკეთდა ds-ად NeuralForecast-ისთვის.
+
+
+
+MarkDown1-5 ხარვეზები შეივსო 0-ებით.
+
+
+
+Temperature, Fuel_Price, CPI, Unemployment ხარვეზები შეივსო საშუალო მნიშვნელობებით (სასწავლო მონაცემებიდან).
+
+
+
+IsHoliday გარდაიქმნა ორობით (0/1).
+
+
+
+ფუნქციების შექმნა:
+
+
+
+
+
+შეიქმნა unique_id (Store_Dept კომბინაცია).
+
+
+
+დაემატა covariates: Temperature, Fuel_Price, CPI, Unemployment, MarkDown1-5, IsHoliday, Size.
+
+
+
+Covariates სტანდარტიზებულია StandardScaler-ით.
+
+
+
+ფილტრაცია: გამოირიცხა სერიები <28 (input_size=24 + horizon=4) ჩანაწერით.
+
+
+
+მონაცემთა გაყოფა: ვალიდაციისთვის გამოყენებულია ბოლო 4 კვირა თითოეული unique_id-ისთვის.
+
+მოდელის არქიტექტურა
+
+
+
+
+
+მოდელები:
+
+
+
+
+
+N-BEATS: input_size=24, horizon=4, max_steps=1000, learning_rate=0.0005, batch_size=8, stack_types=['identity', 'trend', 'seasonality'], n_blocks=[2, 2, 2], mlp_units=[[256, 256], [256, 256], [256, 256]].
+
+
+
+TFT: input_size=24, horizon=4, max_steps=1000, learning_rate=0.0005, batch_size=8, hidden_size=32, n_head=4.
+
+
+
+PatchTST: input_size=24, horizon=4, max_steps=1000, learning_rate=0.0005, batch_size=8, patch_len=8.
+
+
+
+DLinear: input_size=24, horizon=4, max_steps=1000, learning_rate=0.0005, batch_size=8.
+
+
+
+Ensemble: ოთხივე მოდელის პროგნოზების საშუალო.
+
+
+
+ტრენინგი:
+
+
+
+
+
+NeuralForecast-ის გამოყენებით, გაწვრთნილია სასწავლო მონაცემებზე (W-FRI სიხშირე).
+
+
+
+Early stopping (patience=50), validation check ყოველ 50 ნაბიჯზე.
+
+
+
+საბოლოო მოდელები გაწვრთნილია სრულ მონაცემებზე.
+
+
+
+ზარალი: MAE (ვალიდაციისთვის), WMAE არ გამოყენებულა.
+
+შედეგები
+
+
+
+
+
+საბოლოო მეტრიკები:
+
+
+
+
+
+N-BEATS: Validation MAE: 1312.2454.
+
+
+
+TFT: Validation MAE: 1500.8449.
+
+
+
+PatchTST: Validation MAE: 1449.7762.
+
+
+
+DLinear: Validation MAE: 1674.4391.
+
+
+
+Ensemble: Validation MAE: 1426.7006.
+
+
+
+ანალიზი:
+
+
+
+
+
+N-BEATS-მა აჩვენა საუკეთესო MAE, DLinear-მა ყველაზე ცუდი.
+
+
+
+Ensemble-ის MAE უკეთესია, ვიდრე TFT, PatchTST, DLinear, მაგრამ ოდნავ უარესი, ვიდრე N-BEATS.
+
+
+
+ხარვეზების შევსებამ და covariates-ის სტანდარტიზაციამ გააუმჯობესა სტაბილურობა.
+
+
+
+
