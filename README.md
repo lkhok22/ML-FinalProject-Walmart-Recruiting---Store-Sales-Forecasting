@@ -1431,3 +1431,433 @@ TFT მოდელის გამოყენებით გენერი�
 
 ლოგირებულია WandB-ში.
 
+
+
+
+# PatchTST
+
+მონაცემთა წინასწარი დამუშავება
+
+
+
+
+
+მონაცემთა ჩატვირთვა: ჩაიტვირთა Walmart-ის მონაცემები (train.csv, features.csv, stores.csv, test.csv) Google Drive-დან. გაერთიანდა Store და Date-ზე.
+
+
+
+გაწმენდა:
+
+
+
+
+
+ხარვეზების შევსება: MarkDown1-5 შეივსო 0-ებით, CPI და Unemployment ffill-ით.
+
+
+
+კატეგორიული ცვლადები (Store, Dept, Type) გარდაიქმნა LabelEncoder-ის გამოყენებით.
+
+
+
+დაემატა სადღესასწაულო თვისებები: SuperBowl, LaborDay, Thanksgiving, Christmas (1 თუ თარიღი ემთხვევა, 0 სხვა შემთხვევაში).
+
+
+
+დაემატა დროის თვისებები: Year, Month, Week.
+
+
+
+დაემატა Lag_52 (52-კვირიანი lag გაყიდვებისთვის), შევსებული საშუალო მნიშვნელობით.
+
+
+
+StandardScaler გამოყენებულია რიცხვით თვისებებზე (Size, Temperature, Fuel_Price, MarkDown1-5, CPI, Unemployment, Year, Month, Week, SuperBowl, LaborDay, Thanksgiving, Christmas, Lag_52) და სამიზნე ცვლადზე (Weekly_Sales).
+
+
+
+დროის სერიების შექმნა:
+
+
+
+
+
+შეიქმნა თანმიმდევრობები seq_length=52 (4 * 13 patches) მაღაზია-განყოფილების წყვილებისთვის.
+
+
+
+სასწავლო: 261,083 თანმიმდევრობა (21 თვისება).
+
+
+
+ტესტის: 115,064 თანმიმდევრობა.
+
+
+
+თვისებები: 18 რიცხვითი (Size, Temperature, Fuel_Price, MarkDown1-5, CPI, Unemployment, Year, Month, Week, SuperBowl, LaborDay, Thanksgiving, Christmas, Lag_52) + 3 კატეგორიული (Store, Dept, Type).
+
+მოდელის არქიტექტურა
+
+
+
+
+
+PatchTST მოდელი:
+
+
+
+
+
+Patch Embedding: nn.Linear(patch_length * n_features, d_model) (patch_length=4, n_features=21, d_model=256).
+
+
+
+Position Embedding: nn.Parameter (1, n_patches=13, d_model=256).
+
+
+
+Transformer: nn.TransformerEncoder n_layers=4, n_heads=8.
+
+
+
+Output: nn.Linear(d_model * n_patches, 1) ერთი კვირის პროგნოზისთვის.
+
+
+
+პარამეტრები:
+
+
+
+
+
+seq_length=52, patch_length=4, n_patches=13, d_model=256, n_heads=8, n_layers=4.
+
+
+
+Adam ოპტიმიზატორი lr=0.0005, ReduceLROnPlateau (factor=0.5, patience=5).
+
+
+
+ზარალი: WMAE (Weighted Mean Absolute Error, წონები: 5 დღესასწაულებზე, 1 სხვა დღეებზე).
+
+
+
+ტრენინგი:
+
+
+
+
+
+30 ეპოქა, batch size=64.
+
+
+
+ვალიდაციის გაყოფა: 20% სასწავლო მონაცემებიდან.
+
+
+
+WandB მონიტორინგი train_wmae, val_wmae, lr.
+
+შედეგები
+
+
+
+
+
+საბოლოო მეტრიკები (ეპოქა 30):
+
+
+
+
+
+Train WMAE: 0.1383
+
+
+
+Val WMAE: 0.1665
+
+
+
+საუკეთესო Val WMAE: 0.1310 (ეპოქა 13).
+
+
+
+Public Score: 5475.74688
+
+
+
+ანალიზი:
+
+
+
+
+
+Val WMAE მერყეობდა (0.1310-0.2197), რაც მიუთითებს არასტაბილურ განზოგადებაზე.
+
+
+
+PatchTST-ის მოდელმა გააუმჯობესა DLinear-ის მარტივი მიდგომა (მიდგომა 1: 0.2752 Val WMAE), მაგრამ ჩამორჩა გაძლიერებულ DLinear-ს (მიდგომა 3: 0.0835 Val WMAE).
+
+
+
+Transformer-ის არქიტექტურამ (n_heads=8, n_layers=4) შეიძლება გაზარდა სიზუსტე, მაგრამ საჭიროა მეტი ოპტიმიზაცია.
+
+
+
+Lag_52 თვისებამ გააუმჯობესა სეზონური ნიმუშების აღქმა, მაგრამ დამატებითი თვისებები (მაგ., სიახლოვის თვისებები) შეიძლება გაუმჯობესდეს.
+
+გაგზავნა
+
+
+
+
+
+ტესტის მონაცემთა დამუშავება:
+
+
+
+
+
+იგივე წინასწარი დამუშავება, როგორც სასწავლოზე (სკალირება, lag-52, holiday თვისებები).
+
+
+
+თანმიმდევრობები შეიქმნა seq_length=52, შევსებული საშუალო მნიშვნელობებით, თუ ისტორიული მონაცემები არასაკმარისია.
+
+
+
+პროგნოზი:
+
+
+
+
+
+ჩაიტვირთა საუკეთესო მოდელი (best_model.pt, Val WMAE=0.1310).
+
+
+
+გენერირებულია პროგნოზები batch-ებით, inverse transform target_scaler-ით.
+
+
+
+პროგნოზები შეზღუდულია არაუარყოფით მნიშვნელობებზე.
+
+
+
+
+# N-BEATS
+
+
+მონაცემთა წინასწარი დამუშავება
+
+
+
+
+
+მონაცემთა ჩატვირთვა: ჩაიტვირთა Walmart-ის მონაცემები (train.csv, features.csv, stores.csv, test.csv) Google Drive-დან. გაერთიანდა Store, Date და IsHoliday-ზე.
+
+
+
+გაწმენდა:
+
+
+
+
+
+ხარვეზების შევსება: MarkDown1-5 შეივსო 0-ებით, Temperature, Fuel_Price, CPI, Unemployment ffill/bfill-ით ან საშუალო მნიშვნელობებით.
+
+
+
+კატეგორიული ცვლადები (Store, Dept, Type) გარდაიქმნა LabelEncoder-ის გამოყენებით, unknown კატეგორიით უცნობი მნიშვნელობებისთვის.
+
+
+
+IsHoliday გარდაიქმნა 0/1-ად.
+
+
+
+დაემატა დროის თვისებები: Year, Month, Week, DayOfYear, Month_sin, Month_cos, Week_sin, Week_cos.
+
+
+
+დაემატა MarkDown1-5_was_missing ინდიკატორები.
+
+
+
+დროის სერიების შექმნა:
+
+
+
+
+
+შეიქმნა თანმიმდევრობები lookback_window=12 მაღაზია-განყოფილების წყვილებისთვის, მინიმუმ 10 ჩანაწერი თითო წყვილზე.
+
+
+
+სასწავლო: 297,422 თანმიმდევრობა (12x21 თვისება).
+
+
+
+ვალიდაციის: 49,237 თანმიმდევრობა.
+
+
+
+თვისებები: Weekly_Sales, IsHoliday, Temperature, Fuel_Price, CPI, Unemployment, Size, MarkDown1-5, MarkDown1-5_was_missing, Month_sin, Month_cos, Week_sin, Week_cos.
+
+
+
+სკალირება: StandardScaler თვისებებზე.
+
+
+
+მონაცემთა გაყოფა: ვალიდაციის მონაცემები გამოყოფილია ბოლო 20% თარიღებით.
+
+მოდელის არქიტექტურა
+
+
+
+
+
+N-BEATS მოდელი:
+
+
+
+
+
+Stack-ები: 2 (trend + seasonality).
+
+
+
+Blocks per Stack: 3.
+
+
+
+Trend Basis: გამოიყენა TrendBasis (პოლინომიალური გაფართოება).
+
+
+
+Seasonality Basis: გამოიყენა SeasonalityBasis (სინუსოიდური ფუნქციები).
+
+
+
+Block Structure: nn.Linear (input_size * num_features -> layer_size=512), ReLU, Dropout (0.1), theta_layer (theta_size=32).
+
+
+
+გამომავალი: ჯამი ყველა block-ის forecast-ის.
+
+
+
+პარამეტრები:
+
+
+
+
+
+input_size=12, num_features=21, forecast_size=1, stacks=2, blocks_per_stack=3, layers=4, layer_size=512, theta_size=32.
+
+
+
+Adam ოპტიმიზატორი lr=1e-4.
+
+
+
+ზარალი: WMAE (წონები: 5 დღესასწაულებზე, 1 სხვა დღეებზე).
+
+
+
+ტრენინგი:
+
+
+
+
+
+100 ეპოქა, batch size=64.
+
+
+
+WandB მონიტორინგი train_loss, val_loss, val_wmae.
+
+შედეგები
+
+
+
+
+
+საბოლოო მეტრიკები (ეპოქა 100):
+
+
+
+
+
+Train Loss: 13764.4344
+
+
+
+Val Loss: 13486.2666
+
+
+
+Val WMAE: 13490.0205
+
+
+
+საუკეთესო Val WMAE: 13331.3350 (ეპოქა 86).
+
+
+
+Public Score: არ არის მოწოდებული.
+
+
+
+ანალიზი:
+
+
+
+
+
+Val WMAE მერყეობდა (13331.3350-13852.6846), რაც მიუთითებს განზოგადების გაუმჯობესების პოტენციალზე.
+
+
+
+N-BEATS-ის trend და seasonality block-ებმა შეძლეს სეზონური ნიმუშების აღქმა, მაგრამ მაღალი WMAE მიუთითებს შეზღუდვებზე რთულ მაღაზია-განყოფილების ნიმუშებში.
+
+
+
+დამატებითი თვისებები (Month_sin/cos, Week_sin/cos) გააუმჯობესა სეზონურობის აღქმა, მაგრამ lag თვისებების არარსებობამ შეიძლება შეამცირა სიზუსტე.
+
+გაგზავნა
+
+
+
+
+
+ტესტის მონაცემთა დამუშავება:
+
+
+
+
+
+იგივე წინასწარი დამუშავება, როგორც სასწავლოზე (სკალირება, label encoding, time features).
+
+
+
+თანმიმდევრობები მომზადდა lookback_window=12.
+
+
+
+პროგნოზი:
+
+
+
+
+
+ჩაიტვირთა საუკეთესო მოდელი (ეპოქა 86, Val WMAE=13331.3350).
+
+
+
+გენერირებულია პროგნოზები batch-ებით.
+
+
+
+
