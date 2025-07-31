@@ -855,7 +855,7 @@ Early stopping თავიდან აიცილებს გადაჭა
 
 
 
---------------------- # approache 3 # ---------------------
+---------------------  approache 3  ---------------------
 
 მონაცემთა წინასწარი დამუშავება
 
@@ -1081,17 +1081,7 @@ Early stopping არ გააქტიურდა, საუკეთეს�
 
 
 
-გაგზავნის ფაილი:
-
-
-
-
-
-შეიქმნა submission_enhanced_v4.csv (115,064 პროგნოზი).
-
-
-
-WandB სტატისტიკა: mean=14,442.28, std=18,261.46, min=0, max=120,749.08.
+----------//შედარება მიდგომების//----------
 
 ძირითადი განსხვავებები
 
@@ -1099,21 +1089,21 @@ WandB სტატისტიკა: mean=14,442.28, std=18,261.46, min=0, max=
 
 
 
-თვისებები:
+features:
 
 
 
 
 
-მიდგომა 1: 12 თვისება.
+მიდგომა 1: 12 features.
 
 
 
-მიდგომა 2: 16 თვისება.
+მიდგომა 2: 16 features.
 
 
 
-მიდგომა 3: 26 თვისება (WeekOfYear, Month, Year, Lag1, Lag2, Lag4, SuperBowl_Before/After, LaborDay_Before/After).
+მიდგომა 3: 26 features (WeekOfYear, Month, Year, Lag1, Lag2, Lag4, SuperBowl_Before/After, LaborDay_Before/After).
 
 
 
@@ -1153,7 +1143,7 @@ WandB სტატისტიკა: mean=14,442.28, std=18,261.46, min=0, max=
 
 
 
-ზარალი:
+error:
 
 
 
