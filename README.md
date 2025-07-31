@@ -546,3 +546,658 @@ Public Score: არ არის მოცემული, მაგრამ �
 Prophet-ის მიდგომა გთავაზობთ მარტივ, ავტომატიზებულ გადაწყვეტას სეზონური ნიმუშებისთვის, მაგრამ მისი ეფექტურობა შეიძლება შეიზღუდოს გარე ცვლადების გამოყენების არარსებობით და გამოტოვებული კომბინაციებისთვის 0-ის გამოყენებით. SARIMAX-ისა და Random Forest-ის ჰიბრიდული მიდგომები (მესამე/მეოთხე) უფრო ზუსტია, რადგან ისინი იყენებენ მდიდარ ფუნქციებს და უკეთეს სარეზერვო სტრატეგიებს.
 
 
+
+
+
+# DLinear 
+
+მონაცემთა წინასწარი დამუშავება
+
+
+
+
+
+მონაცემთა ჩატვირთვა: ჩაიტვირთა Walmart-ის მონაცემთა ნაკრები (train.csv, features.csv, stores.csv, test.csv) Google Drive-დან. მონაცემები გაერთიანდა Store და Date ცვლადებზე.
+
+
+
+გაწმენდა:
+
+
+
+
+
+ხარვეზების შევსება: MarkDown1-MarkDown5, CPI, Unemployment, Temperature, Fuel_Price, Size შეივსო 0-ებით ან საშუალო მნიშვნელობებით.
+
+
+
+IsHoliday გარდაიქმნა 0/1-ად, Type გარდაიქმნა რიცხვებად (A=0, B=1, C=2).
+
+
+
+გამოყენებულია StandardScaler Weekly_Sales-ისა და თვისებების ნორმალიზაციისთვის, clipping [-1e5, 1e5].
+
+
+
+დროის სერიების შექმნა: მონაცემები გაიყო მაღაზია-განყოფილების წყვილებად (Store, Dept). შეიქმნა უწყვეტი ყოველკვირეული მონაცემები pd.date_range-ის გამოყენებით, ხარვეზები შეივსო ffill-ით ან 0-ებით.
+
+
+
+თვისებები: 12 ეგზოგენური თვისება (Temperature, Fuel_Price, CPI, Unemployment, MarkDown1-5, Size, Type, IsHoliday).
+
+
+
+მონაცემთა ნაკრები:
+
+
+
+
+
+სასწავლო: 251,133 ნიმუში
+
+
+
+ვალიდაციის: 316,241 ნიმუში
+
+მოდელის არქიტექტურა
+
+
+
+
+
+DLinear მოდელი:
+
+
+
+
+
+Trend: ერთი nn.Linear(seq_len, pred_len) ფენა.
+
+
+
+Seasonal: ერთი nn.Linear(seq_len, pred_len) ფენა.
+
+
+
+Exogenous: ერთი nn.Linear(seq_len * n_features, pred_len) ფენა.
+
+
+
+გამომავალი: trend + seasonal + exogenous.
+
+
+
+პარამეტრები:
+
+
+
+
+
+seq_len=36, pred_len=6, n_features=12.
+
+
+
+Adam ოპტიმიზატორი lr=0.001.
+
+
+
+ზარალი: MSE + WMAE (Weighted Mean Absolute Error, წონები: 4 დღესასწაულებისთვის, 1 სხვა დღეებისთვის).
+
+
+
+ტრენინგი:
+
+
+
+
+
+20 ეპოქა, batch size=32.
+
+
+
+გრადიენტის clipping (max_norm=1.0).
+
+
+
+WandB მონიტორინგი.
+
+შედეგები
+
+
+
+
+
+საბოლოო მეტრიკები (ეპოქა 20):
+
+
+
+
+
+Train MSE: 0.0956, Train WMAE: 0.2780
+
+
+
+Val MSE: 0.1057, Val WMAE: 0.2752
+
+
+
+Public Score: 6098
+
+
+
+ანალიზი:
+
+
+
+
+
+Train WMAE სტაბილური (~0.277-0.289), Val WMAE მერყეობდა (0.2376-0.2935).
+
+
+
+მარტივი არქიტექტურა შეიძლება ზღუდავდეს რთული ნიმუშების აღქმას.
+
+
+
+მაღალი Val WMAE ეპოქა 6-ზე (0.2935) მიუთითებს გადაჭარბებულ მორგებაზე ან მონაცემთა ხარვეზებზე.
+
+
+
+მეშვიდე მიდგომა (DLinear მოდელი - მიდგომა 2)
+
+მონაცემთა წინასწარი დამუშავება
+
+
+
+
+
+განსხვავებები მიდგომა 1-ისგან:
+
+
+
+
+
+დაემატა ოთხი სადღესასწაულო თვისება: SuperBowl, LaborDay, Thanksgiving, Christmas (1 თუ თარიღი ემთხვევა, 0 სხვა შემთხვევაში).
+
+
+
+თვისებების რაოდენობა გაიზარდა 12-დან 16-მდე.
+
+
+
+სხვა წინასწარი დამუშავება იდენტურია.
+
+
+
+მონაცემთა ნაკრები:
+
+
+
+
+
+სასწავლო: 251,133 ნიმუში
+
+
+
+ვალიდაციის: 316,241 ნიმუში
+
+მოდელის არქიტექტურა
+
+
+
+
+
+DLinear მოდელი:
+
+
+
+
+
+Trend: სამფენიანი MLP (seq_len -> seq_len -> seq_len/2 -> pred_len) ReLU-ით და dropout (0.1).
+
+
+
+Seasonal: სამფენიანი MLP (seq_len -> seq_len -> seq_len/2 -> pred_len) ReLU-ით და dropout (0.1).
+
+
+
+Exogenous: სამფენიანი MLP (seq_len * n_features -> 512 -> 256 -> pred_len) ReLU-ით და dropout (0.1).
+
+
+
+გამომავალი: trend + seasonal + exogenous.
+
+
+
+პარამეტრები:
+
+
+
+
+
+seq_len=36, pred_len=6, n_features=16.
+
+
+
+Adam ოპტიმიზატორი lr=0.0001.
+
+
+
+ზარალი: MSE + 2 * WMAE.
+
+
+
+Early stopping (patience=5) Val WMAE-ზე.
+
+
+
+გრადიენტის clipping (max_norm=1.0).
+
+
+
+ტრენინგი:
+
+
+
+
+
+20 ეპოქა, batch size=32.
+
+
+
+WandB მონიტორინგი unscaled WMAE-ით.
+
+შედეგები
+
+
+
+
+
+საბოლოო მეტრიკები (ეპოქა 20):
+
+
+
+
+
+Train MSE: 0.0753, Train WMAE: 0.2026, Train WMAE Unscaled: 4148.68
+
+
+
+Val MSE: 0.0585, Val WMAE: 0.1565, Val WMAE Unscaled: 3203.88
+
+
+
+Public Score: 4906
+
+
+
+ანალიზი:
+
+
+
+
+
+Val WMAE გაუმჯობესდა (0.1565 vs 0.2752).
+
+
+
+Unscaled WMAE (Train: 4148.68, Val: 3203.88) ზუსტი პროგნოზები.
+
+
+
+ღრმა MLP და სადღესასწაულო თვისებები აუმჯობესებენ სეზონური ნიმუშების აღქმას.
+
+
+
+Early stopping თავიდან აიცილებს გადაჭარბებულ მორგებას (საუკეთესო Val WMAE: 0.1560 ეპოქა 18).
+
+
+
+მერვე მიდგომა (გაძლიერებული DLinear მოდელი - მიდგომა 3)
+
+მონაცემთა წინასწარი დამუშავება
+
+
+
+
+
+მონაცემთა ჩატვირთვა: ჩაიტვირთა Walmart-ის მონაცემები Google Drive-დან. გაერთიანდა Store და Date-ზე.
+
+
+
+გაწმენდა:
+
+
+
+
+
+ხარვეზების შევსება: MarkDown1-5, CPI, Unemployment, Temperature, Fuel_Price, Size 0-ებით ან საშუალო მნიშვნელობებით.
+
+
+
+IsHoliday გარდაიქმნა 0/1-ად, Type (A=0, B=1, C=2).
+
+
+
+დაემატა სადღესასწაულო თვისებები: SuperBowl, LaborDay, Thanksgiving, Christmas.
+
+
+
+დაემატა დროის თვისებები: WeekOfYear, Month, Year.
+
+
+
+დაემატა სიახლოვის თვისებები: SuperBowl_Before/After, LaborDay_Before/After (±2 კვირა).
+
+
+
+დაემატა lagged გაყიდვები: Lag1, Lag2, Lag4.
+
+
+
+StandardScaler 26 თვისებაზე, clipping [-1e5, 1e5].
+
+
+
+დროის სერიების შექმნა: გაიყო მაღაზია-განყოფილებებად, შეიქმნა უწყვეტი მონაცემები pd.date_range-ით.
+
+
+
+თვისებები: 26 ეგზოგენური თვისება (Temperature, Fuel_Price, CPI, Unemployment, MarkDown1-5, Size, Type, IsHoliday, SuperBowl, LaborDay, Thanksgiving, Christmas, WeekOfYear, Month, Year, Lag1, Lag2, Lag4, SuperBowl_Before/After, LaborDay_Before/After).
+
+
+
+მონაცემთა ნაკრები:
+
+
+
+
+
+სასწავლო: 251,133 ნიმუში
+
+
+
+ვალიდაციის: 316,241 ნიმუში
+
+მოდელის არქიტექტურა
+
+
+
+
+
+გაძლიერებული DLinear მოდელი:
+
+
+
+
+
+Trend: სამფენიანი MLP (seq_len -> seq_len -> seq_len/2 -> pred_len) ReLU-ით, dropout (0.2).
+
+
+
+Seasonal: სამფენიანი MLP (seq_len -> seq_len -> seq_len/2 -> pred_len) ReLU-ით, dropout (0.2).
+
+
+
+Exogenous: Attention ფენა (feature_dim=26, attention_dim=128), შემდეგ სამფენიანი MLP (seq_len * n_features -> 512 -> 256 -> pred_len) ReLU-ით, dropout (0.2).
+
+
+
+Holiday-Specific: სამფენიანი MLP (seq_len * 5 -> 256 -> pred_len) დღესასწაულებისთვის (IsHoliday, SuperBowl, LaborDay, Thanksgiving, Christmas).
+
+
+
+Trend Decomposition: nn.AvgPool1d (kernel_size=7) ტრენდის გამოყოფისთვის.
+
+
+
+კომბინაცია: nn.Linear(pred_len * 4, pred_len) ყველა კომპონენტის გაერთიანებისთვის.
+
+
+
+პარამეტრები:
+
+
+
+
+
+seq_len=36, pred_len=6, n_features=26, dropout=0.2, kernel_size=7.
+
+
+
+Adam ოპტიმიზატორი lr=0.0001, weight_decay=1e-5.
+
+
+
+ზარალი: MSE + 3 * WMAE.
+
+
+
+ReduceLROnPlateau (factor=0.5, patience=3).
+
+
+
+Early stopping (patience=10) Val WMAE-ზე.
+
+
+
+გრადიენტის clipping (max_norm=1.0).
+
+
+
+ტრენინგი:
+
+
+
+
+
+50 ეპოქა, batch size=32.
+
+
+
+WandB მონიტორინგი unscaled WMAE-ით.
+
+შედეგები
+
+
+
+
+
+საბოლოო მეტრიკები (ეპოქა 50):
+
+
+
+
+
+Train MSE: 0.0476, Train WMAE: 0.1100, Train WMAE Unscaled: 2252.39
+
+
+
+Val MSE: 0.0400, Val WMAE: 0.0835, Val WMAE Unscaled: 1710.73
+
+
+
+Public Score: არ არის მოწოდებული.
+
+
+
+ანალიზი:
+
+
+
+
+
+მნიშვნელოვანი გაუმჯობესება Val WMAE (0.0835 vs 0.1565) და unscaled WMAE (1710.73 vs 3203.88).
+
+
+
+Attention და სადღესასწაულო ფენა აუმჯობესებს თვისებების ურთიერთქმედებას.
+
+
+
+Early stopping არ გააქტიურდა, საუკეთესო Val WMAE: 0.0833 ეპოქა 46.
+
+გაგზავნა
+
+
+
+
+
+ტესტის მონაცემთა დამუშავება:
+
+
+
+
+
+იგივე წინასწარი დამუშავება (26 თვისება, სკალირება, lagged გაყიდვები).
+
+
+
+შეიქმნა თანმიმდევრობები, გამოყენებულია სასწავლო მონაცემები lagged-ისთვის.
+
+
+
+პროგნოზი:
+
+
+
+
+
+ჩაიტვირთა საუკეთესო მოდელი (enhanced_dlinear_model_best_v3.pth).
+
+
+
+გენერირებული პროგნოზები პირველი კვირისთვის (pred_len=6).
+
+
+
+განხორციელდა inverse transform scaler_sales-ით.
+
+
+
+პროგნოზები შეზღუდულია არაუარყოფით მნიშვნელობებზე.
+
+
+
+გაგზავნის ფაილი:
+
+
+
+
+
+შეიქმნა submission_enhanced_v4.csv (115,064 პროგნოზი).
+
+
+
+WandB სტატისტიკა: mean=14,442.28, std=18,261.46, min=0, max=120,749.08.
+
+ძირითადი განსხვავებები
+
+
+
+
+
+თვისებები:
+
+
+
+
+
+მიდგომა 1: 12 თვისება.
+
+
+
+მიდგომა 2: 16 თვისება.
+
+
+
+მიდგომა 3: 26 თვისება (WeekOfYear, Month, Year, Lag1, Lag2, Lag4, SuperBowl_Before/After, LaborDay_Before/After).
+
+
+
+არქიტექტურა:
+
+
+
+
+
+მიდგომა 1: ხაზოვანი ფენები.
+
+
+
+მიდგომა 2: სამფენიანი MLP ReLU-ით, dropout (0.1).
+
+
+
+მიდგომა 3: სამფენიანი MLP, attention, სადღესასწაულო ფენა, ტრენდის გამოყოფა.
+
+
+
+სწავლის სიჩქარე:
+
+
+
+
+
+მიდგომა 1: lr=0.001.
+
+
+
+მიდგომა 2: lr=0.0001.
+
+
+
+მიდგომა 3: lr=0.0001 ReduceLROnPlateau-ით.
+
+
+
+ზარალი:
+
+
+
+
+
+მიდგომა 1: MSE + WMAE.
+
+
+
+მიდგომა 2: MSE + 2 * WMAE.
+
+
+
+მიდგომა 3: MSE + 3 * WMAE.
+
+
+
+დამატებითი მექანიზმები:
+
+
+
+
+
+მიდგომა 3: attention, სადღესასწაულო MLP, ტრენდის გამოყოფა.
+
+
+
+ტრენინგის ხანგრძლივობა:
+
+
+
+
+
+მიდგომა 1 & 2: 20 ეპოქა.
+
+
+
+მიდგომა 3: 50 ეპოქა early stopping-ით (patience=10).
+
+
+
+მეტრიკები:
+
+
+
+
+
+მიდგომა 3: საუკეთესო Val WMAE (0.0835), unscaled WMAE (1710.73).
+
