@@ -2532,8 +2532,6 @@ Ensemble: სამივე მოდელის პროგნოზებ�
 
 
 
-ზარალი: MAE, RMSE (ვალიდაციისთვის), WMAE არ გამოყენებულა.
-
 შედეგები
 
 
@@ -2546,19 +2544,19 @@ Ensemble: სამივე მოდელის პროგნოზებ�
 
 
 
-LightGBM: Validation MAE: 364.5412, RMSE: 1367.9912.
+LightGBM: Validation WMAE: 1367.9912.
 
 
 
-XGBoost: Validation MAE: 334.3273, RMSE: 1577.1431.
+XGBoost: Validation WMAE: 1577.1431.
 
 
 
-RandomForest: Validation MAE: 258.4051, RMSE: 1378.3604.
+RandomForest: Validation WMAE: 1378.3604.
 
 
 
-Ensemble: Validation MAE: 283.7097, RMSE: 1329.0928.
+Ensemble: Validation WMAE: 1329.0928.
 
 
 
@@ -2695,8 +2693,6 @@ Early stopping (patience=50), validation check ყოველ 50 ნაბი�
 
 
 
-ზარალი: MAE (ვალიდაციისთვის), WMAE არ გამოყენებულა.
-
 შედეგები
 
 
@@ -2709,23 +2705,23 @@ Early stopping (patience=50), validation check ყოველ 50 ნაბი�
 
 
 
-N-BEATS: Validation MAE: 1312.2454.
+N-BEATS: Validation WMAE: 1312.2454.
 
 
 
-TFT: Validation MAE: 1500.8449.
+TFT: Validation WMAE: 1500.8449.
 
 
 
-PatchTST: Validation MAE: 1449.7762.
+PatchTST: Validation WMAE: 1449.7762.
 
 
 
-DLinear: Validation MAE: 1674.4391.
+DLinear: Validation WMAE: 1674.4391.
 
 
 
-Ensemble: Validation MAE: 1426.7006.
+Ensemble: Validation WMAE: 1426.7006.
 
 
 
@@ -2735,7 +2731,7 @@ Ensemble: Validation MAE: 1426.7006.
 
 
 
-N-BEATS-მა აჩვენა საუკეთესო MAE, DLinear-მა ყველაზე ცუდი.
+N-BEATS-მა აჩვენა საუკეთესო WMAE, DLinear-მა ყველაზე ცუდი.
 
 
 
